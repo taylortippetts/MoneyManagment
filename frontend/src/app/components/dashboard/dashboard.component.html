@@ -1,0 +1,110 @@
+<div class="dashboard-header">
+  <h1>Dashboard</h1>
+  <div class="date-filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Start Date</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onFilterChange()">
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>End Date</mat-label>
+      <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onFilterChange()">
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="clearFilters()">Clear</button>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <p>Loading dashboard...</p>
+</div>
+
+<div *ngIf="!loading && summary" class="dashboard-content">
+  <mat-grid-list cols="3" rowHeight="120px" gutterSize="16px" class="summary-cards">
+    <mat-grid-tile>
+      <mat-card class="summary-card income-card">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>arrow_downward</mat-icon>
+          </div>
+          <div class="card-details">
+            <div class="card-label">Total Income</div>
+            <div class="card-value positive">{{ formatCurrency(summary.totalIncome) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="summary-card expense-card">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>arrow_upward</mat-icon>
+          </div>
+          <div class="card-details">
+            <div class="card-label">Total Expenses</div>
+            <div class="card-value negative">{{ formatCurrency(summary.totalExpenses) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="summary-card net-card" [ngClass]="{'positive': summary.netAmount >= 0, 'negative': summary.netAmount < 0}">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>{{ summary.netAmount >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+          </div>
+          <div class="card-details">
+            <div class="card-label">Net Amount</div>
+            <div class="card-value">{{ formatCurrency(summary.netAmount) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+
+  <div class="stats-row">
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>Transaction Count</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-value">{{ summary.transactionCount }}</div>
+        <div class="stat-label">transactions in selected period</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="breakdown-card">
+      <mat-card-header>
+        <mat-card-title>Expense Breakdown by Category</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="category-list" *ngIf="summary.categoryBreakdown.length > 0">
+          <div class="category-item" *ngFor="let category of summary.categoryBreakdown">
+            <div class="category-info">
+              <span class="category-name">{{ category.categoryName }}</span>
+              <span class="category-amount">{{ formatCurrency(category.totalAmount) }}</span>
+            </div>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="getCategoryPercentage(category)"
+              color="accent">
+            </mat-progress-bar>
+            <div class="category-percentage">{{ getCategoryPercentage(category) | number:'1.1-1' }}%</div>
+          </div>
+        </div>
+        <div *ngIf="summary.categoryBreakdown.length === 0" class="no-data">
+          No expense data available for this period
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<div *ngIf="!loading && !summary" class="no-data-message">
+  <mat-icon>info</mat-icon>
+  <p>No transaction data available. Import a CSV file to get started.</p>
+  <button mat-raised-button color="primary" routerLink="/import">Import CSV</button>
+</div>

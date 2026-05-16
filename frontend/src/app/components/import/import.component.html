@@ -1,0 +1,197 @@
+<div class="import-header">
+  <h1>Import Transactions</h1>
+  <p class="subtitle">Import your bank transactions from CSV files</p>
+</div>
+
+<mat-card class="import-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>cloud_upload</mat-icon>
+      Upload CSV File
+    </mat-card-title>
+    <mat-card-subtitle>
+      Supported formats: Date, Description, Amount (positive for deposits, negative for withdrawals)
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Account Selection -->
+    <div class="account-selection" *ngIf="accounts.length > 0">
+      <mat-form-field appearance="outline" class="account-select">
+        <mat-label>Select Account</mat-label>
+        <mat-select [(value)]="selectedAccountId">
+          <mat-option *ngFor="let account of accounts" [value]="account.id">
+            {{ account.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Drop Zone -->
+    <div 
+      class="drop-zone"
+      [class.hovered]="dropZoneHovered"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (click)="triggerFileInput()">
+      
+      <mat-icon class="drop-icon">upload_file</mat-icon>
+      <p class="drop-text">Drag and drop your CSV file here</p>
+      <p class="drop-hint">or click to browse</p>
+      
+      <input 
+        type="file" 
+        #fileInput
+        id="fileInput"
+        accept=".csv" 
+        (change)="onFileSelected($event)" 
+        style="display: none;">
+    </div>
+
+    <!-- Selected File -->
+    <div *ngIf="selectedFile" class="selected-file">
+      <mat-icon>insert_drive_file</mat-icon>
+      <div class="file-info">
+        <span class="file-name">{{ selectedFile.name }}</span>
+        <span class="file-size">{{ (selectedFile.size / 1024).toFixed(1) }} KB</span>
+      </div>
+      <button mat-icon-button color="warn" (click)="clearSelection()" matTooltip="Remove file">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Import Button -->
+    <div class="action-buttons" *ngIf="selectedFile && !importResult">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="importFile()"
+        [disabled]="isImporting">
+        <mat-icon *ngIf="!isImporting">play_arrow</mat-icon>
+        {{ isImporting ? 'Importing...' : 'Import Transactions' }}
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div *ngIf="isImporting" class="progress-section">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p class="progress-text">Processing your file...</p>
+    </div>
+
+    <!-- Import Results -->
+    <div *ngIf="importResult" class="results-section">
+      <mat-card class="result-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon [color]="importResult.errorCount > 0 ? 'warn' : 'accent'">
+              {{ importResult.errorCount > 0 ? 'warning' : 'check_circle' }}
+            </mat-icon>
+            Import Complete
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item>
+              <mat-icon mat-list-icon>description</mat-icon>
+              <span mat-line>Total rows processed</span>
+              <span mat-line class="result-value">{{ importResult.totalRows }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <mat-icon mat-list-icon color="accent">add_circle</mat-icon>
+              <span mat-line>Successfully imported</span>
+              <span mat-line class="result-value success">{{ importResult.importedCount }}</span>
+            </mat-list-item>
+            <mat-list-item *ngIf="importResult.duplicateCount > 0">
+              <mat-icon mat-list-icon color="warn">repeat</mat-icon>
+              <span mat-line>Duplicates skipped</span>
+              <span mat-line class="result-value warning">{{ importResult.duplicateCount }}</span>
+            </mat-list-item>
+            <mat-list-item *ngIf="importResult.errorCount > 0">
+              <mat-icon mat-list-icon color="warn">error</mat-icon>
+              <span mat-line>Errors encountered</span>
+              <span mat-line class="result-value warning">{{ importResult.errorCount }}</span>
+            </mat-list-item>
+          </mat-list>
+
+          <!-- Error Details -->
+          <div *ngIf="importResult.errors && importResult.errors.length > 0" class="error-details">
+            <h4>Errors:</h4>
+            <ul>
+              <li *ngFor="let error of importResult.errors">{{ error }}</li>
+            </ul>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="result-actions">
+        <button mat-raised-button color="primary" routerLink="/transactions">
+          <mat-icon>receipt</mat-icon>
+          View Transactions
+        </button>
+        <button mat-stroked-button (click)="clearSelection()">
+          <mat-icon>add</mat-icon>
+          Import Another File
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<mat-card class="info-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>info</mat-icon>
+      CSV Format Guide
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p>Your CSV file should contain the following columns:</p>
+    <table class="format-table">
+      <thead>
+        <tr>
+          <th>Column Name</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>date</code></td>
+          <td>Yes</td>
+          <td>Transaction date (YYYY-MM-DD, MM/DD/YYYY)</td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td>Yes</td>
+          <td>Transaction description or memo</td>
+        </tr>
+        <tr>
+          <td><code>amount</code></td>
+          <td>Yes</td>
+          <td>Amount (positive for deposits, negative for withdrawals)</td>
+        </tr>
+        <tr>
+          <td><code>category</code></td>
+          <td>No</td>
+          <td>Category name (must match existing categories)</td>
+        </tr>
+        <tr>
+          <td><code>type</code></td>
+          <td>No</td>
+          <td>Transaction type (debit, credit, etc.)</td>
+        </tr>
+        <tr>
+          <td><code>accountnumber</code></td>
+          <td>No</td>
+          <td>Account identifier</td>
+        </tr>
+        <tr>
+          <td><code>balance</code></td>
+          <td>No</td>
+          <td>Running balance after transaction</td>
+        </tr>
+      </tbody>
+    </table>
+  </mat-card-content>
+</mat-card>

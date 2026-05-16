@@ -1,0 +1,30 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="snav.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>{{ title }}</span>
+  <span class="spacer"></span>
+  <button mat-button [routerLink]="['/import']">
+    <mat-icon>cloud_upload</mat-icon>
+    Import CSV
+  </button>
+</mat-toolbar>
+
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #snav mode="side" opened class="sidenav">
+    <nav mat-list>
+      <a mat-list-item 
+         *ngFor="let item of navItems" 
+         [routerLink]="item.path" 
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>{{ item.icon }}</mat-icon>
+        <span mat-line>{{ item.label }}</span>
+      </a>
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

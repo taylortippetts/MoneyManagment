@@ -1,0 +1,19 @@
+date,description,amount,category,type,accountnumber,balance
+2024-01-01,Opening Balance,5000.00,Income,deposit,CHK-001,5000.00
+2024-01-02,Rent Payment,-1200.00,Housing,debit,CHK-001,3800.00
+2024-01-03,Electric Company,-85.50,Housing,debit,CHK-001,3714.50
+2024-01-05,Grocery Store,-156.78,Food & Dining,debit,CHK-001,3557.72
+2024-01-06,Gas Station,-45.00,Transportation,debit,CHK-001,3512.72
+2024-01-08,Restaurant Dinner,-67.50,Food & Dining,debit,CHK-001,3445.22
+2024-01-10,Pharmacy,-23.45,Healthcare,debit,CHK-001,3421.77
+2024-01-12,Netflix Subscription,-15.99,Entertainment,debit,CHK-001,3405.78
+2024-01-13,Clothing Store,-89.99,Shopping,debit,CHK-001,3315.79
+2024-01-15,Paycheck,2500.00,Income,deposit,CHK-001,5815.79
+2024-01-16,Internet Bill,-79.99,Bills & Fees,debit,CHK-001,5735.80
+2024-01-17,Grocery Store,-124.56,Food & Dining,debit,CHK-001,5611.24
+2024-01-18,Car Insurance,-120.00,Transportation,debit,CHK-001,5491.24
+2024-01-20,Movie Theater,-28.00,Entertainment,debit,CHK-001,5463.24
+2024-01-22,Gas Station,-52.00,Transportation,debit,CHK-001,5411.24
+2024-01-25,Transfer to Savings,-500.00,Savings & Investments,transfer,CHK-001,4911.24
+2024-01-28,Restaurant Lunch,-34.50,Food & Dining,debit,CHK-001,4876.74
+2024-01-30,Phone Bill,-65.00,Bills & Fees,debit,CHK-001,4811.74

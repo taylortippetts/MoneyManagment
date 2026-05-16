@@ -1,0 +1,150 @@
+<div class="reports-header">
+  <h1>Reports</h1>
+  <div class="date-filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Start Date</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onFilterChange()">
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>End Date</mat-label>
+      <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onFilterChange()">
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
+    <button mat-stroked-button color="accent" (click)="clearFilters()">Clear</button>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <p>Loading reports...</p>
+</div>
+
+<div *ngIf="!loading && summary" class="reports-content">
+  <!-- Summary Cards -->
+  <mat-grid-list cols="4" rowHeight="100px" gutterSize="16px" class="summary-grid">
+    <mat-grid-tile>
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon income">
+            <mat-icon>arrow_downward</mat-icon>
+          </div>
+          <div class="card-info">
+            <div class="card-label">Total Income</div>
+            <div class="card-value">{{ formatCurrency(summary.totalIncome) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon expense">
+            <mat-icon>arrow_upward</mat-icon>
+          </div>
+          <div class="card-info">
+            <div class="card-label">Total Expenses</div>
+            <div class="card-value">{{ formatCurrency(summary.totalExpenses) }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon" [ngClass]="summary.netAmount >= 0 ? 'positive' : 'negative'">
+            <mat-icon>{{ summary.netAmount >= 0 ? 'savings' : 'warning' }}</mat-icon>
+          </div>
+          <div class="card-info">
+            <div class="card-label">Net Savings</div>
+            <div class="card-value" [ngClass]="summary.netAmount >= 0 ? 'positive' : 'negative'">
+              {{ formatCurrency(summary.netAmount) }}
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>receipt</mat-icon>
+          </div>
+          <div class="card-info">
+            <div class="card-label">Transactions</div>
+            <div class="card-value">{{ summary.transactionCount }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <!-- Category Breakdown Pie Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Expense Breakdown by Category</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="pie-chart-container" *ngIf="pieChartLabels.length > 0">
+          <div class="legend">
+            <div class="legend-item" *ngFor="let item of summary.categoryBreakdown; let i = index">
+              <div class="legend-color" [style.background-color]="getChartColor(i)"></div>
+              <span class="legend-label">{{ item.categoryName }}</span>
+              <span class="legend-value">{{ formatCurrency(item.totalAmount) }}</span>
+              <span class="legend-percent">{{ getCategoryPercent(item) }}%</span>
+            </div>
+          </div>
+          <div class="pie-visual">
+            <div class="simple-pie-chart">
+              <div class="pie-segment" *ngFor="let value of pieChartData; let i = index"
+                   [style.background]="getChartColor(i)"
+                   [style.height.%]="getSegmentPercent(i)">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="pieChartLabels.length === 0" class="no-data">
+          <mat-icon>pie_chart</mat-icon>
+          <p>No expense data available</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Top Categories Bar Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Top Expense Categories</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="bar-chart-container" *ngIf="getTopCategories().length > 0">
+          <div class="bar-item" *ngFor="let category of getTopCategories()">
+            <div class="bar-label">{{ category.categoryName }}</div>
+            <div class="bar-track">
+              <div class="bar-fill" 
+                   [style.width.%]="getCategoryPercent(category)"
+                   [style.background-color]="getCategoryColor(category.categoryId)">
+                <span class="bar-value">{{ formatCurrency(category.totalAmount) }}</span>
+              </div>
+            </div>
+            <div class="bar-percent">{{ getCategoryPercent(category) }}%</div>
+          </div>
+        </div>
+        <div *ngIf="getTopCategories().length === 0" class="no-data">
+          <mat-icon>bar_chart</mat-icon>
+          <p>No data available</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<div *ngIf="!loading && !summary" class="no-data-message">
+  <mat-icon>insert_chart</mat-icon>
+  <p>No transaction data available for reports</p>
+  <button mat-raised-button color="primary" routerLink="/import">Import CSV</button>
+</div>

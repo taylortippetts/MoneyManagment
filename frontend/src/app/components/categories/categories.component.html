@@ -1,0 +1,144 @@
+<div class="categories-header">
+  <h1>Categories</h1>
+  <button mat-raised-button color="primary" (click)="createNewCategory()">
+    <mat-icon>add</mat-icon>
+    New Category
+  </button>
+</div>
+
+<div class="categories-container">
+  <!-- Category List -->
+  <mat-card class="category-list-card">
+    <mat-card-header>
+      <mat-card-title>Expense Categories</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+
+      <div class="category-section" *ngIf="!loading">
+        <h3>Income</h3>
+        <div 
+          class="category-item" 
+          *ngFor="let category of getIncomeCategories()"
+          [class.selected]="selectedCategory?.id === category.id"
+          (click)="selectCategory(category)">
+          <div class="category-color" [style.background-color]="category.color"></div>
+          <span class="category-name">{{ category.name }}</span>
+          <mat-icon *ngIf="!category.isActive" class="inactive-icon">visibility_off</mat-icon>
+        </div>
+
+        <h3>Expenses</h3>
+        <div 
+          class="category-item" 
+          *ngFor="let category of getExpenseCategories()"
+          [class.selected]="selectedCategory?.id === category.id"
+          (click)="selectCategory(category)">
+          <div class="category-color" [style.background-color]="category.color"></div>
+          <span class="category-name">{{ category.name }}</span>
+          <mat-icon *ngIf="!category.isActive" class="inactive-icon">visibility_off</mat-icon>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Category Editor -->
+  <mat-card class="category-editor-card" *ngIf="editingCategory">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>edit</mat-icon>
+        {{ editingCategory.id ? 'Edit Category' : 'New Category' }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="category-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Category Name</mat-label>
+          <input matInput [(ngModel)]="editingCategory.name" name="name" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <input matInput [(ngModel)]="editingCategory.description" name="description">
+        </mat-form-field>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Color</mat-label>
+            <input matInput [(ngModel)]="editingCategory.color" name="color" type="color">
+          </mat-form-field>
+
+          <div class="color-preview" [style.background-color]="editingCategory.color"></div>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Icon</mat-label>
+          <mat-select [(ngModel)]="editingCategory.icon" name="icon">
+            <mat-option value="home">home</mat-option>
+            <mat-option value="restaurant">restaurant</mat-option>
+            <mat-option value="directions_car">directions_car</mat-option>
+            <mat-option value="local_hospital">local_hospital</mat-option>
+            <mat-option value="theaters">theaters</mat-option>
+            <mat-option value="shopping_cart">shopping_cart</mat-option>
+            <mat-option value="receipt">receipt</mat-option>
+            <mat-option value="savings">savings</mat-option>
+            <mat-option value="trending_up">trending_up</mat-option>
+            <mat-option value="help">help</mat-option>
+            <mat-option value="label">label</mat-option>
+            <mat-option value="work">work</mat-option>
+            <mat-option value="school">school</mat-option>
+            <mat-option value="pets">pets</mat-option>
+            <mat-option value="fitness_center">fitness_center</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div *ngIf="editingCategory.icon" class="icon-preview">
+          <mat-icon>{{ editingCategory.icon }}</mat-icon>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Auto-categorize Keywords</mat-label>
+          <input matInput [(ngModel)]="editingCategory.autoCategorizeKeywords" name="autoCategorizeKeywords" 
+                 placeholder="Comma-separated keywords (e.g., walmart,grocery)">
+          <mat-hint>Transactions with these words will be auto-categorized</mat-hint>
+        </mat-form-field>
+
+        <div class="form-check">
+          <mat-checkbox [(ngModel)]="editingCategory.isIncome" name="isIncome">
+            Income Category
+          </mat-checkbox>
+        </div>
+
+        <div class="form-check">
+          <mat-checkbox [(ngModel)]="editingCategory.isActive" name="isActive">
+            Active
+          </mat-checkbox>
+        </div>
+      </form>
+
+      <div class="form-actions">
+        <button mat-stroked-button (click)="cancelEditing()">Cancel</button>
+        <button mat-raised-button color="primary" (click="saveCategory()" [disabled]="!editingCategory.name">
+          <mat-icon>save</mat-icon>
+          {{ editingCategory.id ? 'Update' : 'Create' }}
+        </button>
+      </div>
+
+      <div class="delete-section" *ngIf="selectedCategory && editingCategory.id">
+        <button mat-stroked-button color="warn" (click="deleteCategory()">
+          <mat-icon>delete</mat-icon>
+          Delete Category
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- No Selection Message -->
+  <mat-card class="no-selection-card" *ngIf="!editingCategory && !loading">
+    <mat-card-content>
+      <mat-icon>category</mat-icon>
+      <p>Select a category to view details or create a new one</p>
+    </mat-card-content>
+  </mat-card>
+</div>
