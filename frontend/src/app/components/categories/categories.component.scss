@@ -1,0 +1,174 @@
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    color: #333;
+  }
+}
+
+.categories-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-list-card,
+.category-editor-card,
+.no-selection-card {
+  height: fit-content;
+}
+
+.category-list-card {
+  mat-card-header {
+    margin-bottom: 16px;
+  }
+
+  .loading {
+    padding: 20px;
+  }
+
+  .category-section {
+    h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #666;
+      margin: 16px 0 8px 0;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .category-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f5f5f5;
+    }
+
+    &.selected {
+      background-color: #e8eaf6;
+    }
+
+    .category-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      margin-right: 12px;
+    }
+
+    .category-name {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .inactive-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #999;
+    }
+  }
+}
+
+.category-editor-card {
+  mat-card-header {
+    margin-bottom: 24px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .category-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+
+      mat-form-field {
+        flex: 1;
+      }
+
+      .color-preview {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+      }
+    }
+
+    .icon-preview {
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #666;
+      }
+    }
+
+    .form-check {
+      margin-top: 8px;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .delete-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+.no-selection-card {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+    color: #666;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}

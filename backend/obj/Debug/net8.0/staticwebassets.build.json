@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "7yjIzHJmYj+RXXWHIb6jz9twu+0D3cotB4bT+0QdJWc=",
+  "Source": "MoneyManager.API",
+  "BasePath": "_content/MoneyManager.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
