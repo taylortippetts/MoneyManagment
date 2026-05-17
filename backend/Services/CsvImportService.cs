@@ -53,6 +53,17 @@ public class CsvImportService
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             
+            // Copy non-seekable streams into a MemoryStream so we can seek/reset safely
+            Stream workingStream = csvStream;
+            MemoryStream? tempBuffer = null;
+            if (!csvStream.CanSeek)
+            {
+                tempBuffer = new MemoryStream();
+                await csvStream.CopyToAsync(tempBuffer);
+                tempBuffer.Position = 0;
+                workingStream = tempBuffer;
+            }
+
             // Get format configuration
             CsvFormatConfiguration? format = null;
             if (formatId.HasValue)
@@ -63,20 +74,24 @@ public class CsvImportService
             // If no format specified, try to auto-detect
             if (format == null)
             {
-                format = await DetectFormatAsync(csvStream);
+                format = await DetectFormatAsync(workingStream);
                 if (format == null)
                 {
                     result.Errors.Add("Could not detect CSV format. Please specify a format manually.");
                     result.ErrorCount++;
+                    tempBuffer?.Dispose();
                     return result;
                 }
             }
             
             // Reset stream position
-            csvStream.Position = 0;
+            if (workingStream.CanSeek)
+            {
+                workingStream.Position = 0;
+            }
             
             // Parse CSV with format configuration
-            using var reader = new StreamReader(csvStream);
+            using var reader = new StreamReader(workingStream, encoding: System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = format.HasHeader,
@@ -93,6 +108,29 @@ public class CsvImportService
                 await reader.ReadLineAsync();
             }
             
+            // Ensure header is read/populated when HasHeader is true
+            if (format.HasHeader)
+            {
+                // Read the header row so CsvHelper can populate HeaderRecord
+                if (!await csv.ReadAsync())
+                {
+                    result.Errors.Add("CSV file has no header record");
+                    result.ErrorCount++;
+                    return result;
+                }
+
+                try
+                {
+                    csv.ReadHeader();
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add("Failed to read CSV header: " + ex.Message);
+                    result.ErrorCount++;
+                    return result;
+                }
+            }
+
             // Read header and create column index mapping
             if (csv.HeaderRecord == null)
             {
@@ -192,6 +230,7 @@ public class CsvImportService
             }
             
             await context.SaveChangesAsync();
+            tempBuffer?.Dispose();
         }
         catch (Exception ex)
         {
@@ -209,7 +248,9 @@ public class CsvImportService
     private async Task<CsvFormatConfiguration?> DetectFormatAsync(Stream csvStream)
     {
         csvStream.Position = 0;
-        using var reader = new StreamReader(csvStream);
+        // Do not close the underlying stream when the StreamReader is disposed
+        // because the caller expects to continue using the stream. Use leaveOpen=true.
+        using var reader = new StreamReader(csvStream, encoding: System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
         var headerLine = await reader.ReadLineAsync();
         
         if (string.IsNullOrEmpty(headerLine))
@@ -223,16 +264,19 @@ public class CsvImportService
             .ToListAsync();
         
         var headerLower = headerLine.ToLower();
-        
-        // Try to match by header signature
+
+        // Normalize header by removing surrounding quotes so signature matching works
+        var headerNormalized = headerLower.Replace("\"", "");
+
+        // Try to match by header signature (normalized)
         var matchingFormat = formats.FirstOrDefault(f => 
             !string.IsNullOrEmpty(f.HeaderSignature) && 
-            headerLower.Contains(f.HeaderSignature.ToLower()));
-        
+            headerNormalized.Contains(f.HeaderSignature.ToLower()));
+
         // If no match, try to match by required column names
         if (matchingFormat == null)
         {
-            var headerColumns = headerLower.Split(',').Select(c => c.Trim()).ToList();
+            var headerColumns = headerNormalized.Split(',').Select(c => c.Trim()).ToList();
             
             foreach (var format in formats)
             {
@@ -282,7 +326,13 @@ public class CsvImportService
     /// </summary>
     private string? GetFieldValue(string[] fields, Dictionary<string, int> headerMap, string? columnName)
     {
-        if (string.IsNullOrEmpty(columnName) || !headerMap.TryGetValue(columnName.ToLowerInvariant(), out var index))
+        if (string.IsNullOrEmpty(columnName))
+        {
+            return null;
+        }
+
+        var key = columnName.ToLowerInvariant();
+        if (!headerMap.TryGetValue(key, out var index))
         {
             return null;
         }
@@ -435,7 +485,12 @@ public class CsvImportService
     private string? ParseAccountNumber(string[] fields, Dictionary<string, int> headerMap, CsvFormatConfiguration format)
     {
         var accountNumber = GetFieldValue(fields, headerMap, format.AccountNumberColumn);
-        return string.IsNullOrEmpty(accountNumber) ? null : accountNumber.Trim();
+        var acc = accountNumber ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(acc))
+        {
+            return null;
+        }
+        return acc.Trim();
     }
 
     /// <summary>
@@ -447,7 +502,7 @@ public class CsvImportService
             .Where(c => !string.IsNullOrEmpty(c.AutoCategorizeKeywords))
             .ToListAsync();
         
-        var descriptionLower = description.ToLower();
+        var descriptionLower = (description ?? string.Empty).ToLower();
         
         foreach (var category in categories)
         {
@@ -488,7 +543,7 @@ public class CsvImportService
         if (accountId.HasValue)
             query = query.Where(t => t.AccountId == accountId);
         
-        var transactions = await query.OrderBy(t => t.Date).ThenBy(t => t.Amount).ToListAsync();
+        var transactions = await query.OrderBy(t => t.Date).ThenBy(t => t.Id).ToListAsync();
         
         using var memoryStream = new MemoryStream();
         using var writer = new StreamWriter(memoryStream);

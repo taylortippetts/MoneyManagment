@@ -13,13 +13,25 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav #snav mode="side" opened class="sidenav">
     <nav mat-list>
-      <a mat-list-item 
-         *ngFor="let item of navItems" 
-         [routerLink]="item.path" 
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{ exact: true }">
-        <mat-icon mat-list-icon>{{ item.icon }}</mat-icon>
-        <span mat-line>{{ item.label }}</span>
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>dashboard</mat-icon>
+        <span mat-line>Dashboard</span>
+      </a>
+      <a mat-list-item routerLink="/transactions" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>receipt</mat-icon>
+        <span mat-line>Transactions</span>
+      </a>
+      <a mat-list-item routerLink="/categories" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>category</mat-icon>
+        <span mat-line>Categories</span>
+      </a>
+      <a mat-list-item routerLink="/import" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>cloud_upload</mat-icon>
+        <span mat-line>Import CSV</span>
+      </a>
+      <a mat-list-item routerLink="/reports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon mat-list-icon>insert_chart</mat-icon>
+        <span mat-line>Reports</span>
       </a>
     </nav>
   </mat-sidenav>

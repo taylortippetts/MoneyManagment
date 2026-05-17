@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -15,6 +13,9 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { AgGridModule } from 'ag-grid-angular';
+import { ColDef, GridReadyEvent } from 'ag-grid-community';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { Transaction, Category, TransactionFilter } from '../../models/transaction.model';
@@ -26,7 +27,6 @@ import { Transaction, Category, TransactionFilter } from '../../models/transacti
     CommonModule,
     FormsModule,
     MatCardModule,
-    MatTableModule,
     MatPaginatorModule,
     MatIconModule,
     MatButtonModule,
@@ -39,7 +39,8 @@ import { Transaction, Category, TransactionFilter } from '../../models/transacti
     MatDialogModule,
     MatCheckboxModule,
     MatSnackBarModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    AgGridModule
   ],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss'
@@ -51,8 +52,47 @@ export class TransactionsComponent implements OnInit {
   totalCount = 0;
   pageSize = 20;
   pageIndex = 0;
-  
-  displayedColumns: string[] = ['date', 'description', 'category', 'amount', 'actions'];
+
+  columnDefs: ColDef[] = [
+    {
+      headerName: 'Account',
+      valueGetter: params => params.data?.account?.name || params.data?.accountNumber || 'Unknown',
+      sortable: true,
+      filter: true,
+      flex: 1
+    },
+    {
+      headerName: 'Name',
+      field: 'description',
+      sortable: true,
+      filter: true,
+      flex: 1.5
+    },
+    {
+      headerName: 'Category',
+      valueGetter: params => params.data?.category?.name || 'Uncategorized',
+      sortable: true,
+      filter: true,
+      flex: 1
+    },
+    {
+      headerName: 'Amount',
+      field: 'amount',
+      sortable: true,
+      filter: true,
+      flex: 0.8,
+      valueFormatter: params => this.formatCurrency(params.value),
+      cellClass: params => params.value >= 0 ? 'amount-cell positive' : 'amount-cell negative',
+      cellStyle: { textAlign: 'right' }
+    }
+  ];
+
+  defaultColDef: ColDef = {
+    resizable: true,
+    sortable: true,
+    filter: true,
+    minWidth: 120
+  };
   
   filter: TransactionFilter = {
     page: 1,
@@ -65,6 +105,10 @@ export class TransactionsComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
+
+  onGridReady(params: GridReadyEvent): void {
+    params.api.sizeColumnsToFit();
+  }
 
   ngOnInit(): void {
     this.loadCategories();
@@ -124,7 +168,7 @@ export class TransactionsComponent implements OnInit {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount);
+    }).format(amount ?? 0);
   }
 
   formatDate(date: Date | string): string {

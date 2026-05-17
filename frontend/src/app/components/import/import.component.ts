@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +9,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { ImportResult, Account } from '../../models/transaction.model';
@@ -17,6 +20,7 @@ import { ImportResult, Account } from '../../models/transaction.model';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
@@ -24,7 +28,9 @@ import { ImportResult, Account } from '../../models/transaction.model';
     MatListModule,
     MatSnackBarModule,
     MatSelectModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatInputModule,
+    MatTooltipModule
   ],
   templateUrl: './import.component.html',
   styleUrl: './import.component.scss'
@@ -33,10 +39,12 @@ export class ImportComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   selectedFile: File | null = null;
   isImporting = false;
+  isCreatingAccount = false;
   importResult: ImportResult | null = null;
   dropZoneHovered = false;
   accounts: Account[] = [];
   selectedAccountId: number | null = null;
+  newAccountName: string = '';
 
   constructor(
     private transactionService: TransactionService,
@@ -49,16 +57,40 @@ export class ImportComponent implements OnInit {
   }
 
   loadAccounts(): void {
-    this.accountService.getAccounts(true).subscribe({
+    this.accountService.getAccounts(false).subscribe({
       next: (accounts) => {
         this.accounts = accounts;
-        if (accounts.length > 0) {
+        if (accounts.length > 0 && !this.selectedAccountId) {
           this.selectedAccountId = accounts[0].id;
         }
       },
       error: (error) => {
         console.error('Error loading accounts:', error);
         this.snackBar.open('Error loading accounts', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  createAccount(): void {
+    const name = this.newAccountName.trim();
+    if (!name) {
+      this.snackBar.open('Please enter a valid account name', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.isCreatingAccount = true;
+    this.accountService.createAccount({ name, isActive: true }).subscribe({
+      next: (account) => {
+        this.accounts = [...this.accounts, account];
+        this.selectedAccountId = account.id;
+        this.newAccountName = '';
+        this.isCreatingAccount = false;
+        this.snackBar.open(`Account "${account.name}" created`, 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error creating account:', error);
+        this.isCreatingAccount = false;
+        this.snackBar.open('Error creating account. Please try again.', 'Close', { duration: 3000 });
       }
     });
   }

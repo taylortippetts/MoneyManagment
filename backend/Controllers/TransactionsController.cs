@@ -65,7 +65,7 @@ public class TransactionsController : ControllerBase
         // Apply pagination
         var transactions = await query
             .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.Amount)
+            .ThenByDescending(t => t.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -243,7 +243,10 @@ public class TransactionsController : ControllerBase
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         
-        var query = context.Transactions.AsQueryable();
+        var query = context.Transactions
+            .Include(t => t.Category)
+            .Include(t => t.Account)
+            .AsQueryable();
         
         if (startDate.HasValue)
             query = query.Where(t => t.Date >= startDate.Value);
@@ -251,23 +254,26 @@ public class TransactionsController : ControllerBase
         if (endDate.HasValue)
             query = query.Where(t => t.Date <= endDate.Value);
         
-        var totalIncome = await query.Where(t => t.Amount > 0).SumAsync(t => t.Amount);
-        var totalExpenses = await query.Where(t => t.Amount < 0).SumAsync(t => Math.Abs(t.Amount));
-        var transactionCount = await query.CountAsync();
+        var transactions = await query
+            .Include(t => t.Category)
+            .ToListAsync();
+
+        var totalIncome = transactions.Where(t => t.Amount > 0).Sum(t => t.Amount);
+        var totalExpenses = transactions.Where(t => t.Amount < 0).Sum(t => Math.Abs(t.Amount));
+        var transactionCount = transactions.Count;
         
         // Get category breakdown
-        var categorySummary = await query
-            .Include(t => t.Category)
-            .GroupBy(t => new { t.CategoryId, t.Category!.Name })
+        var categorySummary = transactions
+            .GroupBy(t => new { t.CategoryId, CategoryName = t.Category?.Name ?? "Uncategorized" })
             .Select(g => new
             {
                 CategoryId = g.Key.CategoryId,
-                CategoryName = g.Key.Name,
+                CategoryName = g.Key.CategoryName,
                 TotalAmount = g.Sum(t => t.Amount),
                 TransactionCount = g.Count()
             })
             .OrderByDescending(g => Math.Abs(g.TotalAmount))
-            .ToListAsync();
+            .ToList();
         
         return Ok(new
         {

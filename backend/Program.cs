@@ -1,11 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyManager.API.Data;
 using MoneyManager.API.Services;
+using System.Text.Json.Serialization;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -13,7 +18,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configure SQLite database
-var connectionString = "Data Source=moneymanager.db";
+var dbPath = Path.Combine(builder.Environment.ContentRootPath, "moneymanager.db");
+var connectionString = $"Data Source={dbPath}";
 builder.Services.AddDbContextFactory<MoneyManagerDbContext>(options =>
     options.UseSqlite(connectionString));
 
@@ -51,6 +57,8 @@ app.UseCors("AllowAngularApp");
 app.UseAuthorization();
 
 app.MapControllers();
+
+Console.WriteLine($"Using SQLite database at: {dbPath}");
 
 // Initialize database
 using (var scope = app.Services.CreateScope())

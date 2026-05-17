@@ -48,66 +48,17 @@
       <p>Loading transactions...</p>
     </div>
 
-    <table mat-table [dataSource]="transactions" *ngIf="!loading && transactions.length > 0" class="transaction-table">
-      <!-- Date Column -->
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Date</th>
-        <td mat-cell *matCellDef="let transaction">{{ formatDate(transaction.date) }}</td>
-      </ng-container>
-
-      <!-- Description Column -->
-      <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef>Description</th>
-        <td mat-cell *matCellDef="let transaction">
-          <div class="description-cell">
-            <span>{{ transaction.description }}</span>
-            <span *ngIf="transaction.sourceFile" class="source-badge">{{ transaction.sourceFile }}</span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Category Column -->
-      <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
-        <td mat-cell *matCellDef="let transaction">
-          <mat-form-field class="category-select" subscriptSizing="dynamic">
-            <mat-select 
-              [value]="transaction.categoryId" 
-              (selectionChange)="updateCategory(transaction, $event.value)"
-              panelClass="category-dropdown">
-              <mat-option *ngFor="let category of categories" [value]="category.id">
-                <span class="category-option" [style.background-color]="category.color">
-                  {{ category.name }}
-                </span>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </td>
-      </ng-container>
-
-      <!-- Amount Column -->
-      <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef class="amount-header">Amount</th>
-        <td mat-cell *matCellDef="let transaction" 
-            class="amount-cell"
-            [ngClass]="{'positive': transaction.amount >= 0, 'negative': transaction.amount < 0}">
-          {{ formatCurrency(transaction.amount) }}
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
-        <td mat-cell *matCellDef="let transaction" class="actions-cell">
-          <button mat-icon-button color="warn" (click)="deleteTransaction(transaction.id)" matTooltip="Delete">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+    <div *ngIf="!loading" class="transactions-grid ag-theme-alpine">
+      <ag-grid-angular
+        style="width: 100%; height: 620px;"
+        class="ag-theme-alpine"
+        [rowData]="transactions"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [animateRows]="true"
+        (gridReady)="onGridReady($event)">
+      </ag-grid-angular>
+    </div>
 
     <div *ngIf="!loading && transactions.length === 0" class="no-data">
       <mat-icon>inbox</mat-icon>

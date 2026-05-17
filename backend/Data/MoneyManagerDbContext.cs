@@ -104,5 +104,29 @@ public class MoneyManagerDbContext : DbContext
             new Category { Id = 9, Name = "Savings & Investments", Description = "Transfers to savings and investments", Color = "#8BC34A", Icon = "savings", IsIncome = false, IsActive = true },
             new Category { Id = 10, Name = "Uncategorized", Description = "Transactions not yet categorized", Color = "#9E9E9E", Icon = "help", IsIncome = false, IsActive = true, AutoCategorizeKeywords = "" }
         );
+
+        // Seed a CSV format configuration for Discover-style exports (Debit/Credit columns)
+        modelBuilder.Entity<CsvFormatConfiguration>().HasData(
+            new CsvFormatConfiguration
+            {
+                Id = 1,
+                Name = "Discover (Debit/Credit)",
+                FormatKey = "discover_debit_credit",
+                Delimiter = ",",
+                HasHeader = true,
+                SkipRows = 0,
+                DateColumn = "Transaction Date",
+                DateFormat = "MM/dd/yyyy",
+                DescriptionColumn = "Transaction Description",
+                TypeColumn = "Transaction Type",
+                DebitColumn = "Debit",
+                CreditColumn = "Credit",
+                BalanceColumn = "Balance",
+                HeaderSignature = "Transaction Date,Transaction Description,Transaction Type,Debit,Credit,Balance",
+                UseDebitCreditConvention = true,
+                CleanCurrencyFormat = true,
+                IsActive = true
+            }
+        );
     }
 }

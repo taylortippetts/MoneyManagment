@@ -27,11 +27,29 @@
 }
 
 .account-selection {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 
   .account-select {
     width: 100%;
     max-width: 400px;
+  }
+
+  .no-accounts-message {
+    margin-top: 8px;
+    color: #555;
+  }
+}
+
+.new-account-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+
+  .new-account-input {
+    flex: 1 1 320px;
+    min-width: 240px;
   }
 }
 

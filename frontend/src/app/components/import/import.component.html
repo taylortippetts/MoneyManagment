@@ -16,15 +16,33 @@
 
   <mat-card-content>
     <!-- Account Selection -->
-    <div class="account-selection" *ngIf="accounts.length > 0">
-      <mat-form-field appearance="outline" class="account-select">
+    <div class="account-selection">
+      <mat-form-field appearance="outline" class="account-select" *ngIf="accounts.length > 0">
         <mat-label>Select Account</mat-label>
         <mat-select [(value)]="selectedAccountId">
           <mat-option *ngFor="let account of accounts" [value]="account.id">
-            {{ account.name }}
+            {{ account.name }} <span *ngIf="!account.isActive">(inactive)</span>
           </mat-option>
         </mat-select>
       </mat-form-field>
+
+      <div *ngIf="accounts.length === 0" class="no-accounts-message">
+        <p>No accounts found. Create a new account below to import transactions.</p>
+      </div>
+    </div>
+
+    <div class="new-account-section">
+      <mat-form-field appearance="outline" class="new-account-input">
+        <mat-label>New Account Name</mat-label>
+        <input matInput [(ngModel)]="newAccountName" placeholder="e.g. Chase Checking" />
+      </mat-form-field>
+      <button
+        mat-stroked-button
+        color="primary"
+        (click)="createAccount()"
+        [disabled]="!newAccountName.trim() || isCreatingAccount">
+        {{ isCreatingAccount ? 'Creating...' : 'Create New Account' }}
+      </button>
     </div>
 
     <!-- Drop Zone -->
